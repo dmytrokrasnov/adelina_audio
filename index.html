@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Праздничное поздравление</title>
+<title>Привітання з 1-м роком!</title>
 <style>
   body, html {
     margin: 0; padding: 0; height: 100%;
@@ -48,6 +48,21 @@
     opacity: 0.75;
     pointer-events: none;
     z-index: -1;
+  }
+  /* Новый стиль для текста подсказки поверх визуализации */
+  #play-screen p {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 2.5em;
+    font-weight: bold;
+    color: white;
+    text-shadow:
+      -2px -2px 4px rgba(0,0,0,0.8),
+      2px 2px 4px rgba(0,0,0,0.8);
+    pointer-events: none;
+    z-index: 10;
   }
 </style>
 </head>
@@ -163,7 +178,7 @@
         trackAudio.play().then(() => {
           drawVisualizer();
           playBtn.style.display = "none";
-   //       promptText.textContent = "Насолоджуйтесь...";
+          promptText.textContent = "Насолоджуйтесь...";
         }).catch((e) => {
           console.error("Помилка, щось пішло не так:", e);
           promptText.textContent = "Перевірте звук, та спробуйте ще раз.";
