@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Привітання</title>
+<style>
+  body, html {
+    margin: 0; padding: 0; height: 100%;
+    background: url('background.jpg') no-repeat center center fixed;
+    background-size: cover;
+    font-family: Arial, sans-serif;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+  #choice-screen, #play-screen {
+    text-align: center;
+  }
+  /* Контейнер для кнопок, чтобы сделать их вертикальными */
+  #choice-screen {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;  /* Отступ между кнопками */
+    align-items: center;
+  }
+  button {
+    padding: 12px 24px;
+    font-size: 1.2em;
+    cursor: pointer;
+    border: none;
+    border-radius: 6px;
+    background-color: #ff4081;
+    color: white;
+    transition: background-color 0.3s;
+    width: 200px;  /* Можно задать фиксированную ширину для одинакового размера */
+  }
+  button:hover {
+    background-color: #e040fb;
+  }
+  #visualizer {
+    position: fixed;
+    bottom: 0; left: 0;
+    width: 100vw; height: 150px;
+    opacity: 0.75;
+  }
+</style>
+
+</head>
+<body>
+
+<div id="choice-screen">
+  <h1>Вже сканували листівку?</h1>
+  <button id="first-scan-btn">Ні, це перший раз</button>
+  <button id="second-scan-btn">Так, хочемо ще послухати</button>
+</div>
+
+<div id="play-screen" style="display:none;">
+  <p id="prompt-text"></p>
+  <button id="play-btn" style="display:none;">Воспроизвести трек</button>
+</div>
+
+<canvas id="visualizer"></canvas>
+
+<audio id="hint1" src="hint1.mp3" preload="auto"></audio>
+<audio id="hint2" src="hint2.mp3" preload="auto"></audio>
+<audio id="track1" src="track1.mp3" preload="auto"></audio>
+<audio id="track2" src="track2.mp3" preload="auto"></audio>
+
+<script src="script.js"></script>
+
+</body>
+</html>
