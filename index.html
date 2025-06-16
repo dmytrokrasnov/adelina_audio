@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Привітання</title>
+<title>Праздничное поздравление</title>
 <style>
   body, html {
     margin: 0; padding: 0; height: 100%;
@@ -19,7 +19,6 @@
   #choice-screen, #play-screen {
     text-align: center;
   }
-  /* Контейнер для кнопок, чтобы сделать их вертикальными */
   #choice-screen {
     display: flex;
     flex-direction: column;
@@ -35,7 +34,7 @@
     background-color: #ff4081;
     color: white;
     transition: background-color 0.3s;
-    width: 200px;  /* Можно задать фиксированную ширину для одинакового размера */
+    width: 200px;
   }
   button:hover {
     background-color: #e040fb;
@@ -47,14 +46,13 @@
     opacity: 0.75;
   }
 </style>
-
 </head>
 <body>
 
 <div id="choice-screen">
-  <h1>Вже сканували листівку?</h1>
-  <button id="first-scan-btn">Ні, це перший раз</button>
-  <button id="second-scan-btn">Так, хочемо ще послухати</button>
+  <h1>Какое это сканирование?</h1>
+  <button id="first-scan-btn">Первое сканирование</button>
+  <button id="second-scan-btn">Второе сканирование</button>
 </div>
 
 <div id="play-screen" style="display:none;">
@@ -69,7 +67,126 @@
 <audio id="track1" src="track1.mp3" preload="auto"></audio>
 <audio id="track2" src="track2.mp3" preload="auto"></audio>
 
-<script src="script.js"></script>
+<script>
+  const firstScanBtn = document.getElementById("first-scan-btn");
+  const secondScanBtn = document.getElementById("second-scan-btn");
+  const choiceScreen = document.getElementById("choice-screen");
+  const playScreen = document.getElementById("play-screen");
+  const promptText = document.getElementById("prompt-text");
+  const playBtn = document.getElementById("play-btn");
+
+  const hint1 = document.getElementById("hint1");
+  const hint2 = document.getElementById("hint2");
+  const track1 = document.getElementById("track1");
+  const track2 = document.getElementById("track2");
+
+  const canvas = document.getElementById("visualizer");
+  const ctx = canvas.getContext("2d");
+
+  let audioCtx, analyser, dataArray, bufferLength, source;
+  let currentTrack, currentHint;
+
+  function setupAudio(track) {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+
+    if (source) {
+      source.disconnect();
+    }
+
+    source = audioCtx.createMediaElementSource(track);
+    analyser = audioCtx.createAnalyser();
+    source.connect(analyser);
+    analyser.connect(audioCtx.destination);
+    analyser.fftSize = 256;
+    bufferLength = analyser.frequencyBinCount;
+    dataArray = new Uint8Array(bufferLength);
+  }
+
+  function drawVisualizer() {
+    canvas.width = window.innerWidth;
+    canvas.height = 150;
+
+    function draw() {
+      requestAnimationFrame(draw);
+      analyser.getByteFrequencyData(dataArray);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const barWidth = (canvas.width / bufferLength) * 2.5;
+      let x = 0;
+      const time = Date.now() * 0.002;
+
+      for (let i = 0; i < bufferLength; i++) {
+        const rawHeight = dataArray[i];
+        const barHeight = Math.pow(rawHeight, 1.3);
+
+        const hue = (i * 5 + time * 50) % 360;
+        ctx.fillStyle = `hsla(${hue}, 100%, 50%, 0.75)`;
+        ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
+
+        x += barWidth + 1;
+      }
+    }
+
+    draw();
+  }
+
+  async function resumeAudioContext() {
+    if (audioCtx && audioCtx.state === "suspended") {
+      await audioCtx.resume();
+    }
+  }
+
+  function startHintAndWait(hintAudio, trackAudio) {
+    playBtn.style.display = "none";
+    promptText.textContent = "Слушайте подсказку...";
+
+    hintAudio.play();
+
+    hintAudio.onended = () => {
+      promptText.textContent = "Нажмите кнопку, чтобы воспроизвести трек";
+      playBtn.style.display = "inline-block";
+
+      playBtn.onclick = async () => {
+        await resumeAudioContext();
+        setupAudio(trackAudio);
+        trackAudio.play().then(() => {
+          drawVisualizer();
+          playBtn.style.display = "none";
+          promptText.textContent = "Идет воспроизведение...";
+        }).catch((e) => {
+          console.error("Ошибка при воспроизведении:", e);
+          promptText.textContent = "Не удалось воспроизвести трек. Проверьте звук и попробуйте снова.";
+        });
+      };
+    };
+  }
+
+  firstScanBtn.onclick = () => {
+    choiceScreen.style.display = "none";
+    playScreen.style.display = "block";
+    currentHint = hint1;
+    currentTrack = track1;
+    startHintAndWait(currentHint, currentTrack);
+  };
+
+  secondScanBtn.onclick = () => {
+    choiceScreen.style.display = "none";
+    playScreen.style.display = "block";
+    currentHint = hint2;
+    currentTrack = track2;
+    startHintAndWait(currentHint, currentTrack);
+  };
+
+  // Чтобы канвас правильно масштабировался при изменении размера окна
+  window.addEventListener('resize', () => {
+    if (audioCtx && audioCtx.state === "running") {
+      canvas.width = window.innerWidth;
+      canvas.height = 150;
+    }
+  });
+</script>
 
 </body>
 </html>
