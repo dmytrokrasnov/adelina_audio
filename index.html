@@ -22,7 +22,7 @@
   #choice-screen {
     display: flex;
     flex-direction: column;
-    gap: 20px;  /* Отступ между кнопками */
+    gap: 20px;
     align-items: center;
   }
   button {
@@ -41,23 +41,27 @@
   }
   #visualizer {
     position: fixed;
-    bottom: 0; left: 0;
-    width: 100vw; height: 150px;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
     opacity: 0.75;
+    pointer-events: none;
+    z-index: -1;
   }
 </style>
 </head>
 <body>
 
 <div id="choice-screen">
-  <h1>Какое это сканирование?</h1>
-  <button id="first-scan-btn">Первое сканирование</button>
-  <button id="second-scan-btn">Второе сканирование</button>
+  <h1>Вже сканували листівку?</h1>
+  <button id="first-scan-btn">Ні, це перший раз</button>
+  <button id="second-scan-btn">Так, давай продовжимо</button>
 </div>
 
 <div id="play-screen" style="display:none;">
   <p id="prompt-text"></p>
-  <button id="play-btn" style="display:none;">Воспроизвести трек</button>
+  <button id="play-btn" style="display:none;">Готово, вже чекаємо!</button>
 </div>
 
 <canvas id="visualizer"></canvas>
@@ -105,8 +109,13 @@
   }
 
   function drawVisualizer() {
-    canvas.width = window.innerWidth;
-    canvas.height = 150;
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
 
     function draw() {
       requestAnimationFrame(draw);
@@ -119,7 +128,7 @@
 
       for (let i = 0; i < bufferLength; i++) {
         const rawHeight = dataArray[i];
-        const barHeight = Math.pow(rawHeight, 1.3);
+        const barHeight = rawHeight * (canvas.height / 255);
 
         const hue = (i * 5 + time * 50) % 360;
         ctx.fillStyle = `hsla(${hue}, 100%, 50%, 0.75)`;
@@ -140,12 +149,12 @@
 
   function startHintAndWait(hintAudio, trackAudio) {
     playBtn.style.display = "none";
-    promptText.textContent = "Слушайте подсказку...";
+    promptText.textContent = "Невеличка інформація...";
 
     hintAudio.play();
 
     hintAudio.onended = () => {
-      promptText.textContent = "Нажмите кнопку, чтобы воспроизвести трек";
+      promptText.textContent = "Якщо всі готові - тисніть нижче:";
       playBtn.style.display = "inline-block";
 
       playBtn.onclick = async () => {
@@ -154,10 +163,10 @@
         trackAudio.play().then(() => {
           drawVisualizer();
           playBtn.style.display = "none";
-          promptText.textContent = "Идет воспроизведение...";
+          promptText.textContent = "Насолоджуйтесь...";
         }).catch((e) => {
-          console.error("Ошибка при воспроизведении:", e);
-          promptText.textContent = "Не удалось воспроизвести трек. Проверьте звук и попробуйте снова.";
+          console.error("Помилка, щось пішло не так:", e);
+          promptText.textContent = "Перевірте звук, та спробуйте ще раз.";
         });
       };
     };
@@ -179,11 +188,11 @@
     startHintAndWait(currentHint, currentTrack);
   };
 
-  // Чтобы канвас правильно масштабировался при изменении размера окна
+  // Подгоняем канвас под размер окна
   window.addEventListener('resize', () => {
     if (audioCtx && audioCtx.state === "running") {
       canvas.width = window.innerWidth;
-      canvas.height = 150;
+      canvas.height = window.innerHeight;
     }
   });
 </script>
